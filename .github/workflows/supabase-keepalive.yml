@@ -2,26 +2,33 @@ name: Keep Supabase Awake
 
 on:
   schedule:
-    - cron: "0 */5 * * *"   # every 5 hours
-  workflow_dispatch: {}       # allow manual run
+    - cron: "0 * */4 * *"   # Runs every 12 hours (completely safe for the 7-day limit)
+  workflow_dispatch: {}     # Allows manual trigger under the Actions tab
 
 jobs:
-  ping:
+  ping_database:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase (Debug)
+      - name: Execute Live Database Transaction
         run: |
-          echo "Calling: $SUPABASE_URL/rest/v1/"
-          response=$(curl -s -w "\n%{http_code}" \
-            -H "apikey: $SUPABASE_ANON_KEY" \
-            "$SUPABASE_URL/rest/v1/")
+          echo "Sending keep-alive write request to Supabase table..."
           
-          body=$(echo "$response" | sed '$d')
-          status=$(echo "$response" | tail -n1)
-
-          echo "HTTP Status: $status"
-          echo "Response Body: $body"
-
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "apikey: $SUPABASE_SERVICE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d '{}' \
+            "$SUPABASE_URL/rest/v1/project_pings")
+          
+          echo "HTTP Status Received: $STATUS"
+          
+          if [ "$STATUS" -eq 201 ] || [ "$STATUS" -eq 204 ]; then
+            echo "✅ Database Write Successful! Project is awake."
+          else
+            echo "❌ Ping Failed with Status Code: $STATUS"
+            exit 1
+          fi
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
