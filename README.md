@@ -25,7 +25,6 @@
 * **Link & Resource Organizer:** Categorize and save essential web URLs, documents, and reference materials in one place.
 * **Memos & Notes:** Create, edit, and keep track of daily memos and text snippets.
 * **Cloud Persistence:** Seamless backend storage and database synchronization powered by Supabase.
-* **Automated Workflows:** Includes a GitHub Actions keep-alive workflow (`supabase-keepalive.yml`) to keep free-tier Supabase instances active.
 * **Modern UI:** Responsive layout built with React and TypeScript for fast navigation.
 
 ---
